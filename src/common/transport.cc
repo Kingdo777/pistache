@@ -96,6 +96,8 @@ namespace Pistache::Tcp
                     auto& peer = getPeer(tag);
                     handleIncoming(peer);
                 }
+                /// 这里的定时器是不包括，TransportImpl::timerFd的，此fd仅仅是用于让worker线程一直执行oneReady操作
+                /// 而这里的则指得是定时器，用户可以自定义的那种，其是Transport::timersQueue中的某一个
                 else if (isTimerFd(tag))
                 {
                     auto it      = timers.find(static_cast<decltype(timers)::key_type>(tag.value()));

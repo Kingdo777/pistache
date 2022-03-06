@@ -15,7 +15,7 @@ public:
 
     void onRequest(const Http::Request& /*request*/, Http::ResponseWriter response) override
     {
-        response.send(Pistache::Http::Code::Ok, "Hello World\n");
+        response.send(Pistache::Http::Code::Ok, "Hello Wukong\n");
     }
 };
 

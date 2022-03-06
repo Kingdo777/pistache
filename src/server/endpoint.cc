@@ -34,7 +34,8 @@ namespace Pistache::Http
         std::shared_ptr<Tcp::Handler> handler_;
         std::chrono::milliseconds headerTimeout_;
         std::chrono::milliseconds bodyTimeout_;
-
+        /// 这里的定时器很重要，但是之前一直没有注意到，此计时器500ms出发一次，这个定时器的主要工作就是触发线程执行onReady，在onReady中会检查是否有超时的peers
+        /// 也就在此时, 检查headerTimeout_和bodyTimeout_从而关闭长链接
         int timerFd;
 
         void checkIdlePeers();
@@ -50,7 +51,7 @@ namespace Pistache::Http
         Base::registerPoller(poller);
 
         timerFd = TRY_RET(timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK));
-
+        /// 这里的定时器很重要，但是之前一直没有注意到，此计时器500ms出发一次，这个定时器的主要工作就是触发线程执行onReady，在onReady中会检查是否有超时的peers
         static constexpr auto TimerInterval   = std::chrono::milliseconds(500);
         static constexpr auto TimerIntervalNs = std::chrono::duration_cast<std::chrono::nanoseconds>(TimerInterval);
 
