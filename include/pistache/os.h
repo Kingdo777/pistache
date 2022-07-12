@@ -104,9 +104,10 @@ namespace Pistache
             Epoll();
             ~Epoll();
 
-            void addFd(Fd fd, Flags<NotifyOn> interest, Tag tag, Mode mode = Mode::Level);
+            void addFd(Fd fd, Flags<NotifyOn> interest, Tag tag, Mode mode = Mode::Level, bool exclusive = false);
             void addFdOneShot(Fd fd, Flags<NotifyOn> interest, Tag tag,
-                              Mode mode = Mode::Level);
+                              Mode mode      = Mode::Level,
+                              bool exclusive = false);
 
             void removeFd(Fd fd);
             void rearmFd(Fd fd, Flags<NotifyOn> interest, Tag tag,
