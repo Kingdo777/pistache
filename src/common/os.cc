@@ -164,15 +164,13 @@ namespace Pistache
             TRY(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev));
         }
 
-        void Epoll::addFdOneShot(Fd fd, Flags<NotifyOn> interest, Tag tag, Mode mode, bool exclusive)
+        void Epoll::addFdOneShot(Fd fd, Flags<NotifyOn> interest, Tag tag, Mode mode)
         {
             struct epoll_event ev;
             ev.events = toEpollEvents(interest);
             ev.events |= EPOLLONESHOT;
             if (mode == Mode::Edge)
                 ev.events |= EPOLLET;
-            if (exclusive)
-                ev.events |= EPOLLEXCLUSIVE;
             ev.data.u64 = tag.value_;
 
             TRY(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev));

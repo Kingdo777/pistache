@@ -106,8 +106,7 @@ namespace Pistache
 
             void addFd(Fd fd, Flags<NotifyOn> interest, Tag tag, Mode mode = Mode::Level, bool exclusive = false);
             void addFdOneShot(Fd fd, Flags<NotifyOn> interest, Tag tag,
-                              Mode mode      = Mode::Level,
-                              bool exclusive = false);
+                              Mode mode      = Mode::Level);
 
             void removeFd(Fd fd);
             void rearmFd(Fd fd, Flags<NotifyOn> interest, Tag tag,

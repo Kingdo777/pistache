@@ -41,7 +41,7 @@ namespace Pistache::Aio
 
         virtual void registerFd(const Reactor::Key& key, Fd fd,
                                 Polling::NotifyOn interest, Polling::Tag tag,
-                                Polling::Mode mode = Polling::Mode::Level)
+                                Polling::Mode mode = Polling::Mode::Level, bool exclusive = false)
             = 0;
 
         virtual void registerFdOneShot(const Reactor::Key& key, Fd fd,
@@ -65,8 +65,8 @@ namespace Pistache::Aio
     };
 
     /* Synchronous implementation of the reactor that polls in the context
- * of the same thread
- */
+     * of the same thread
+     */
     /**
      * 同步实现，在一个线程中poll
      * 定义了一个handlerList handlers，handlerList中定义了一个数组存放所有的handler
@@ -133,12 +133,12 @@ namespace Pistache::Aio
         // 将fd注册到poller中，interest是感兴趣的事件
         void registerFd(const Reactor::Key& key, Fd fd, Polling::NotifyOn interest,
                         Polling::Tag tag,
-                        Polling::Mode mode = Polling::Mode::Level) override
+                        Polling::Mode mode = Polling::Mode::Level, bool exclusive = false) override
         {
             // encodeTag将fd和index值编码成新的polling::tag
             // 编码的规则是索引值在uint64的高8位，fd在低位
             auto pollTag = encodeTag(key, tag);
-            poller.addFd(fd, Flags<Polling::NotifyOn>(interest), pollTag, mode);
+            poller.addFd(fd, Flags<Polling::NotifyOn>(interest), pollTag, mode, exclusive);
         }
 
         // 使用OneShot Flags，即一旦触发事件，则关闭对fd的轮循，直到再次绑定，也就是执行modifyFd
@@ -275,10 +275,10 @@ namespace Pistache::Aio
                 std::fill(std::begin(handlers), std::end(handlers), nullptr);
             }
 
-            HandlerList(const HandlerList& other) = delete;
+            HandlerList(const HandlerList& other)            = delete;
             HandlerList& operator=(const HandlerList& other) = delete;
 
-            HandlerList(HandlerList&& other) = default;
+            HandlerList(HandlerList&& other)            = default;
             HandlerList& operator=(HandlerList&& other) = default;
 
             // 基于handlers，clone一个新的HandlerList，
@@ -367,30 +367,30 @@ namespace Pistache::Aio
     };
 
     /* Asynchronous implementation of the reactor that spawns a number N of threads
- * and creates a polling fd per thread
- *
- * Implementation detail:
- *
- *  Here is how it works: the implementation simply starts a synchronous variant
- *  of the implementation in its own std::thread. When adding an handler, it
- * will add a clone() of the handler to every worker (thread), and assign its
- * own key to the handler. Here is where things start to get interesting. Here
- * is how the key encoding works for every handler:
- *
- *  [     handler idx      ] [       worker idx         ]
- *  ------------------------ ----------------------------
- *       ^ 32 bits                   ^ 32 bits
- *  -----------------------------------------------------
- *                       ^ 64 bits
- *
- * Since we have up to 64 bits of data for every key, we encode the index of the
- * handler that has been assigned by the SyncImpl in the upper 32 bits, and
- * encode the index of the worker thread in the lowest 32 bits.
- *
- * When registering a fd for a given key, the AsyncImpl then knows which worker
- * to use by looking at the lowest 32 bits of the Key's data. The SyncImpl will
- * then use the highest 32 bits to retrieve the index of the handler.
- */
+     * and creates a polling fd per thread
+     *
+     * Implementation detail:
+     *
+     *  Here is how it works: the implementation simply starts a synchronous variant
+     *  of the implementation in its own std::thread. When adding an handler, it
+     * will add a clone() of the handler to every worker (thread), and assign its
+     * own key to the handler. Here is where things start to get interesting. Here
+     * is how the key encoding works for every handler:
+     *
+     *  [     handler idx      ] [       worker idx         ]
+     *  ------------------------ ----------------------------
+     *       ^ 32 bits                   ^ 32 bits
+     *  -----------------------------------------------------
+     *                       ^ 64 bits
+     *
+     * Since we have up to 64 bits of data for every key, we encode the index of the
+     * handler that has been assigned by the SyncImpl in the upper 32 bits, and
+     * encode the index of the worker thread in the lowest 32 bits.
+     *
+     * When registering a fd for a given key, the AsyncImpl then knows which worker
+     * to use by looking at the lowest 32 bits of the Key's data. The SyncImpl will
+     * then use the highest 32 bits to retrieve the index of the handler.
+     */
     /**
      * 异步实现Reactor，它产生 N 个线程并为每个线程创建一个epoll-fd,实现细节：
      *
@@ -457,9 +457,9 @@ namespace Pistache::Aio
 
         void registerFd(const Reactor::Key& key, Fd fd, Polling::NotifyOn interest,
                         Polling::Tag tag,
-                        Polling::Mode mode = Polling::Mode::Level) override
+                        Polling::Mode mode = Polling::Mode::Level, bool exclusive = false) override
         {
-            dispatchCall(key, &SyncImpl::registerFd, fd, interest, tag, mode);
+            dispatchCall(key, &SyncImpl::registerFd, fd, interest, tag, mode, exclusive);
         }
 
         void registerFdOneShot(const Reactor::Key& key, Fd fd,
@@ -606,9 +606,9 @@ namespace Pistache::Aio
 
     void Reactor::registerFd(const Reactor::Key& key, Fd fd,
                              Polling::NotifyOn interest, Polling::Tag tag,
-                             Polling::Mode mode)
+                             Polling::Mode mode, bool exclusive)
     {
-        impl()->registerFd(key, fd, interest, tag, mode);
+        impl()->registerFd(key, fd, interest, tag, mode, exclusive);
     }
 
     void Reactor::registerFdOneShot(const Reactor::Key& key, Fd fd,
@@ -619,9 +619,9 @@ namespace Pistache::Aio
     }
 
     void Reactor::registerFd(const Reactor::Key& key, Fd fd,
-                             Polling::NotifyOn interest, Polling::Mode mode)
+                             Polling::NotifyOn interest, Polling::Mode mode, bool exclusive)
     {
-        impl()->registerFd(key, fd, interest, Polling::Tag(fd), mode);
+        impl()->registerFd(key, fd, interest, Polling::Tag(fd), mode, exclusive);
     }
 
     void Reactor::registerFdOneShot(const Reactor::Key& key, Fd fd,

@@ -122,13 +122,13 @@ namespace Pistache::Aio
         std::vector<std::shared_ptr<Handler>> handlers(const Key& key);
 
         void registerFd(const Key& key, Fd fd, Polling::NotifyOn interest,
-                        Polling::Tag tag, Polling::Mode mode = Polling::Mode::Level);
+                        Polling::Tag tag, Polling::Mode mode = Polling::Mode::Level, bool exclusive = false);
         void registerFdOneShot(const Key& key, Fd fd, Polling::NotifyOn interest,
                                Polling::Tag tag,
                                Polling::Mode mode = Polling::Mode::Level);
 
         void registerFd(const Key& key, Fd fd, Polling::NotifyOn interest,
-                        Polling::Mode mode = Polling::Mode::Level);
+                        Polling::Mode mode = Polling::Mode::Level, bool exclusive = false);
         void registerFdOneShot(const Key& key, Fd fd, Polling::NotifyOn interest,
                                Polling::Mode mode = Polling::Mode::Level);
 
